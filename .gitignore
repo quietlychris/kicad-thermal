@@ -1,0 +1,7 @@
+/target
+/out
+# The Python original, fetched on demand by scripts/fetch_kicad_fdtd.sh
+/third_party/
+# Synthetic benchmark boards written by bench/boards.py
+/bench/boards/
+__pycache__/

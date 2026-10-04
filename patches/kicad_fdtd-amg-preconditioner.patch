@@ -1,0 +1,127 @@
+diff --git a/kicad_fdtd/thermal.py b/kicad_fdtd/thermal.py
+index 77bfc14..ee372cf 100644
+--- a/kicad_fdtd/thermal.py
++++ b/kicad_fdtd/thermal.py
+@@ -152,9 +152,31 @@ class Grid:
+ 
+ 
+ # ---------------------------------------------------------------- linear algebra
+-def _cg(rows, cols, vals, diag, b, tol=1e-9, maxiter=20000, use_gpu=True):
+-    """Solve (D - offdiag) x = b, SPD, Jacobi-preconditioned CG. rows/cols/vals: off-diagonal
+-    couplings (both directions), diag: diagonal entries."""
++PRECONDS = ("auto", "amg", "jacobi")
++AMG_MIN_CELLS = 50_000      # below this, AMG setup (and pyamg import) costs more than it saves
++
++
++def _amg_preconditioner(A):
++    """Smoothed-aggregation algebraic multigrid V-cycle (pyamg) as a CG preconditioner.
++    The copper/FR4 conductivity contrast (~1000x) and thin layers make the system badly
++    conditioned for Jacobi; AMG cuts CG iterations ~50-80x and they grow far more slowly
++    than Jacobi's as cells shrink."""
++    import pyamg
++    ml = pyamg.smoothed_aggregation_solver(A, symmetry="symmetric", strength="symmetric",
++                                           max_coarse=2000)
++    return ml.aspreconditioner(cycle="V")
++
++
++def _cg(rows, cols, vals, diag, b, tol=1e-9, maxiter=20000, use_gpu=True, precond="auto"):
++    """Solve (D - offdiag) x = b, SPD, preconditioned CG. rows/cols/vals: off-diagonal
++    couplings (both directions), diag: diagonal entries.
++
++    precond: "jacobi" (diagonal), "amg" (pyamg smoothed aggregation, CPU only; error if
++    pyamg is missing), or "auto" (AMG on CPU when pyamg is installed and the system has at
++    least AMG_MIN_CELLS unknowns, else Jacobi). The GPU path always uses Jacobi. The
++    convergence test is the same for every choice."""
++    if precond not in PRECONDS:
++        raise ValueError("precond must be one of %s" % (PRECONDS,))
+     n = len(diag)
+     try:
+         import cupy as cp
+@@ -173,7 +195,15 @@ def _cg(rows, cols, vals, diag, b, tol=1e-9, maxiter=20000, use_gpu=True):
+         import scipy.sparse as sp
+         from scipy.sparse.linalg import cg
+         A = sp.coo_matrix((np.concatenate([-vals, diag]), (np.concatenate([rows, np.arange(n)]), np.concatenate([cols, np.arange(n)]))), shape=(n, n)).tocsr()
+-        M = sp.diags(1.0 / diag)
++        M = None
++        if precond == "amg" or (precond == "auto" and n >= AMG_MIN_CELLS):
++            try:
++                M = _amg_preconditioner(A)
++            except ImportError:
++                if precond == "amg":
++                    raise ImportError("precond='amg' needs pyamg: pip install pyamg (or kicad_fdtd[amg])")
++        if M is None:
++            M = sp.diags(1.0 / diag)
+         x, info = cg(A, b, rtol=tol, maxiter=maxiter, M=M)
+     if info != 0:
+         raise RuntimeError("CG did not converge (info %s)" % info)
+@@ -208,7 +238,7 @@ def _links(g, kx, ky, kz, active=None):
+ 
+ 
+ # ---------------------------------------------------------------- DC
+-def solve_dc(g, net, src, sink, current, use_gpu=True):
++def solve_dc(g, net, src, sink, current, use_gpu=True, precond="auto"):
+     """DC conduction on one net. src/sink = (ref, num). Returns dict with V (volts per cell,
+     nan off-net), drop, J (A/mm2 per cell), joule (W per cell)."""
+     bd = g.bd
+@@ -258,7 +288,7 @@ def solve_dc(g, net, src, sink, current, use_gpu=True):
+         rhs[loc[flat(c)]] -= current / len(sink_cells)
+     gnd = loc[flat(sink_cells[0])]
+     diag[gnd] += 1e3 * diag.max()                     # pin ~0 V
+-    x = _cg(np.concatenate([ra, rb]), np.concatenate([rb, ra]), np.concatenate([G, G]), diag, rhs, use_gpu=use_gpu)
++    x = _cg(np.concatenate([ra, rb]), np.concatenate([rb, ra]), np.concatenate([G, G]), diag, rhs, use_gpu=use_gpu, precond=precond)
+     V = np.full(n, np.nan); V[members] = x - x[gnd]
+     I_link = G * (x[ra] - x[rb])
+     joule = np.zeros(n)
+@@ -282,7 +312,7 @@ def solve_dc(g, net, src, sink, current, use_gpu=True):
+ 
+ 
+ # ---------------------------------------------------------------- thermal
+-def solve_thermal(g, powers, h=10.0, tamb=25.0, extra_q=None, use_gpu=True):
++def solve_thermal(g, powers, h=10.0, tamb=25.0, extra_q=None, use_gpu=True, precond="auto"):
+     """powers: {ref: watts}. extra_q: per-cell W array (e.g. Joule heat). Returns dict with T (C) per cell."""
+     nx, ny, nz = g.nx, g.ny, g.nz
+     n = nx * ny * nz
+@@ -305,7 +335,7 @@ def solve_thermal(g, powers, h=10.0, tamb=25.0, extra_q=None, use_gpu=True):
+     hA = np.zeros((nx, ny, nz)); hA[:, :, 0] += h * faceA; hA[:, :, -1] += h * faceA
+     diag += hA.ravel()
+     rhs = q.ravel() + hA.ravel() * tamb
+-    T = _cg(np.concatenate([a, b]), np.concatenate([b, a]), np.concatenate([G, G]), diag, rhs, use_gpu=use_gpu)
++    T = _cg(np.concatenate([a, b]), np.concatenate([b, a]), np.concatenate([G, G]), diag, rhs, use_gpu=use_gpu, precond=precond)
+     T = T.reshape(nx, ny, nz)
+     return {"T": T, "q": q, "h": h, "tamb": tamb, "P_total": float(q.sum()), "Tmax": float(T.max()), "placed": placed}
+ 
+@@ -344,6 +374,8 @@ def main(argv=None):
+     ap.add_argument("--net"); ap.add_argument("--from", dest="src"); ap.add_argument("--to", dest="sink")
+     ap.add_argument("--current", type=float, default=0.0)
+     ap.add_argument("--cpu", action="store_true")
++    ap.add_argument("--precond", choices=PRECONDS, default="auto",
++                    help="CG preconditioner on CPU: auto (AMG if pyamg is installed), amg, jacobi")
+     ap.add_argument("--out", default="out")
+     a = ap.parse_args(argv)
+     bd = geometry.Board(a.geometry)
+@@ -354,11 +386,11 @@ def main(argv=None):
+     if a.net:
+         if not (a.src and a.sink and a.current):
+             sys.exit("--net needs --from REF.PAD --to REF.PAD --current A")
+-        dc = solve_dc(g, a.net, tuple(a.src.split(".")), tuple(a.sink.split(".")), a.current, use_gpu=not a.cpu)
++        dc = solve_dc(g, a.net, tuple(a.src.split(".")), tuple(a.sink.split(".")), a.current, use_gpu=not a.cpu, precond=a.precond)
+     powers = {}
+     for s in a.power:
+         r, w = s.split("="); powers[r] = float(w)
+-    th = solve_thermal(g, powers, h=a.h, tamb=a.tamb, extra_q=dc["joule"] if dc else None, use_gpu=not a.cpu)
++    th = solve_thermal(g, powers, h=a.h, tamb=a.tamb, extra_q=dc["joule"] if dc else None, use_gpu=not a.cpu, precond=a.precond)
+     print(report(g, th, dc))
+     os.makedirs(a.out, exist_ok=True)
+     path = os.path.join(a.out, "thermal_%s.json" % os.path.basename(a.geometry).split("_")[0])
+diff --git a/pyproject.toml b/pyproject.toml
+index 7fa59c1..87326cc 100644
+--- a/pyproject.toml
++++ b/pyproject.toml
+@@ -23,6 +23,7 @@ dependencies = ["numpy>=1.24", "shapely>=2.0", "scipy>=1.10"]
+ 
+ [project.optional-dependencies]
+ gpu = ["cupy-cuda12x>=13"]
++amg = ["pyamg>=5.0"]
+ dev = ["pytest"]
+ 
+ [project.scripts]

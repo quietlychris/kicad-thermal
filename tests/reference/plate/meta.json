@@ -1,0 +1,60 @@
+{
+ "case": {
+  "name": "plate",
+  "cell": 0.5,
+  "h": 10.0,
+  "tamb": 25.0,
+  "powers": [
+   [
+    "P",
+    1.0
+   ]
+  ],
+  "dc": null
+ },
+ "generator": {
+  "kicad_fdtd_commit": "74e21ebe6b87e19a7c709390d0a9661dc8574576",
+  "python": "3.12.3",
+  "numpy": "2.4.4",
+  "scipy": "1.17.1",
+  "shapely": "2.1.2",
+  "pyamg": "5.3.0"
+ },
+ "grid": {
+  "nx": 40,
+  "ny": 16,
+  "nz": 6
+ },
+ "arrays": {
+  "kx": "kx.f64.gz",
+  "kz": "kz.f64.gz",
+  "via_area": "via_area.f64.gz",
+  "inside": "inside.f64.gz",
+  "cu_frac_0": "cu_frac_0.f64.gz",
+  "cu_frac_1": "cu_frac_1.f64.gz"
+ },
+ "results": {
+  "jacobi": {
+   "arrays": {
+    "T": "jacobi_T.f64.gz"
+   },
+   "thermal": {
+    "Tmax": 363.4623620832657,
+    "P_total": 1.0,
+    "iterations": 233
+   },
+   "report": "thermal: 1.00 W in, h 10 W/m2K both faces, T_amb 25 C, grid 40 x 16 x 6 cells of 0.50 mm\nmax 363.5 C (+338.5 K) at (15.8, -4.2) mm on F.Cu\n   F.Cu    max 363.5 C  mean 344.6 C\n   B.Cu    max 332.3 C  mean 330.4 C\nhottest footprints: P (port) 363.5 C"
+  },
+  "amg": {
+   "arrays": {
+    "T": "amg_T.f64.gz"
+   },
+   "thermal": {
+    "Tmax": 363.4623620804498,
+    "P_total": 1.0,
+    "iterations": 9
+   },
+   "report": "thermal: 1.00 W in, h 10 W/m2K both faces, T_amb 25 C, grid 40 x 16 x 6 cells of 0.50 mm\nmax 363.5 C (+338.5 K) at (15.8, -4.2) mm on F.Cu\n   F.Cu    max 363.5 C  mean 344.6 C\n   B.Cu    max 332.3 C  mean 330.4 C\nhottest footprints: P (port) 363.5 C"
+  }
+ }
+}

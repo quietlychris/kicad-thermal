@@ -1,0 +1,36 @@
+[package]
+name = "kicad-thermal"
+version = "0.1.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+description = "Steady-state thermal and DC IR-drop solver for KiCad boards: a Rust port of kicad_fdtd's thermal module, with Jacobi- and AMG-preconditioned CG"
+readme = "README.md"
+repository = "https://github.com/quietlychris/kicad-thermal"
+keywords = ["kicad", "pcb", "thermal", "ir-drop", "multigrid"]
+categories = ["science", "simulation", "command-line-utilities"]
+exclude = ["/third_party", "/bench/boards", "/out"]
+
+[lib]
+name = "kicad_thermal"
+
+[[bin]]
+name = "kicad-thermal"
+path = "src/bin/kicad-thermal.rs"
+
+[dependencies]
+anyhow = "1"
+clap = { version = "4", features = ["derive"] }
+rayon = "1"
+serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1", features = ["preserve_order"] }
+
+[dev-dependencies]
+flate2 = "1"
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
+
+# The regression suite solves real systems; run it optimized even under `cargo test`.
+[profile.test]
+opt-level = 3

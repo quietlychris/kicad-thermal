@@ -1,0 +1,121 @@
+{
+ "case": {
+  "name": "a4_power",
+  "cell": 0.5,
+  "h": 8.0,
+  "tamb": 40.0,
+  "powers": [
+   [
+    "U0",
+    0.05
+   ],
+   [
+    "U1",
+    0.08
+   ],
+   [
+    "U2",
+    0.11
+   ],
+   [
+    "U3",
+    0.14
+   ],
+   [
+    "U4",
+    0.17
+   ],
+   [
+    "U5",
+    0.2
+   ],
+   [
+    "U6",
+    0.23
+   ],
+   [
+    "U7",
+    0.26
+   ]
+  ],
+  "dc": {
+   "net": "/PWR",
+   "from": [
+    "S",
+    "1"
+   ],
+   "to": [
+    "K",
+    "1"
+   ],
+   "current": 1.5
+  }
+ },
+ "generator": {
+  "kicad_fdtd_commit": "74e21ebe6b87e19a7c709390d0a9661dc8574576",
+  "python": "3.12.3",
+  "numpy": "2.4.4",
+  "scipy": "1.17.1",
+  "shapely": "2.1.2",
+  "pyamg": "5.3.0"
+ },
+ "grid": {
+  "nx": 80,
+  "ny": 60,
+  "nz": 9
+ },
+ "arrays": {
+  "kx": "kx.f64.gz",
+  "kz": "kz.f64.gz",
+  "via_area": "via_area.f64.gz",
+  "inside": "inside.f64.gz",
+  "cu_frac_0": "cu_frac_0.f64.gz",
+  "cu_frac_1": "cu_frac_1.f64.gz",
+  "cu_frac_2": "cu_frac_2.f64.gz",
+  "cu_frac_3": "cu_frac_3.f64.gz"
+ },
+ "results": {
+  "jacobi": {
+   "arrays": {
+    "V": "jacobi_V.f64.gz",
+    "J": "jacobi_J.f64.gz",
+    "T": "jacobi_T.f64.gz"
+   },
+   "dc": {
+    "drop_V": 0.009039076887085273,
+    "R_ohm": 0.006026051258056849,
+    "joule_W": 0.013558615330627948,
+    "Jmax": 64.29845575471968,
+    "cells": 536,
+    "iterations": 158
+   },
+   "thermal": {
+    "Tmax": 118.83720218328357,
+    "P_total": 1.2535586153306282,
+    "iterations": 533
+   },
+   "report": "thermal: 1.25 W in, h 8 W/m2K both faces, T_amb 40 C, grid 80 x 60 x 9 cells of 0.50 mm\nmax 118.8 C (+78.8 K) at (17.8, -22.8) mm on F.Cu\n   F.Cu    max 118.8 C  mean 105.7 C\n   In1.Cu  max 109.8 C  mean 105.7 C\n   In2.Cu  max 108.6 C  mean 105.1 C\n   B.Cu    max 108.5 C  mean 104.9 C\nhottest footprints: U0 (IC0) 118.8 C, U7 (IC7) 115.0 C, U5 (IC5) 111.9 C, U1 (IC1) 111.4 C, U4 (IC4) 110.7 C, U2 (IC2) 110.6 C, U3 (IC3) 110.5 C, U6 (IC6) 109.6 C\nDC /PWR: 1.50 A from source to sink, drop 9.0 mV (6.0 mohm), Joule 0.014 W, max current density 64.3 A/mm2 over 536 copper cells"
+  },
+  "amg": {
+   "arrays": {
+    "V": "amg_V.f64.gz",
+    "J": "amg_J.f64.gz",
+    "T": "amg_T.f64.gz"
+   },
+   "dc": {
+    "drop_V": 0.009039076887085544,
+    "R_ohm": 0.006026051258057029,
+    "joule_W": 0.013558615330628762,
+    "Jmax": 64.2984557538391,
+    "cells": 536,
+    "iterations": 1
+   },
+   "thermal": {
+    "Tmax": 118.83720218427784,
+    "P_total": 1.2535586153306286,
+    "iterations": 23
+   },
+   "report": "thermal: 1.25 W in, h 8 W/m2K both faces, T_amb 40 C, grid 80 x 60 x 9 cells of 0.50 mm\nmax 118.8 C (+78.8 K) at (17.8, -22.8) mm on F.Cu\n   F.Cu    max 118.8 C  mean 105.7 C\n   In1.Cu  max 109.8 C  mean 105.7 C\n   In2.Cu  max 108.6 C  mean 105.1 C\n   B.Cu    max 108.5 C  mean 104.9 C\nhottest footprints: U0 (IC0) 118.8 C, U7 (IC7) 115.0 C, U5 (IC5) 111.9 C, U1 (IC1) 111.4 C, U4 (IC4) 110.7 C, U2 (IC2) 110.6 C, U3 (IC3) 110.5 C, U6 (IC6) 109.6 C\nDC /PWR: 1.50 A from source to sink, drop 9.0 mV (6.0 mohm), Joule 0.014 W, max current density 64.3 A/mm2 over 536 copper cells"
+  }
+ }
+}

@@ -1,0 +1,95 @@
+{
+ "case": {
+  "name": "e2_lshape_vias",
+  "cell": 0.3,
+  "h": 10.0,
+  "tamb": 35.0,
+  "powers": [
+   [
+    "U1",
+    0.8
+   ],
+   [
+    "Q1",
+    0.5
+   ]
+  ],
+  "dc": {
+   "net": "/VIN",
+   "from": [
+    "J1",
+    "1"
+   ],
+   "to": [
+    "U1",
+    "3"
+   ],
+   "current": 3.0
+  }
+ },
+ "generator": {
+  "kicad_fdtd_commit": "74e21ebe6b87e19a7c709390d0a9661dc8574576",
+  "python": "3.12.3",
+  "numpy": "2.4.4",
+  "scipy": "1.17.1",
+  "shapely": "2.1.2",
+  "pyamg": "5.3.0"
+ },
+ "grid": {
+  "nx": 100,
+  "ny": 100,
+  "nz": 6
+ },
+ "arrays": {
+  "kx": "kx.f64.gz",
+  "kz": "kz.f64.gz",
+  "via_area": "via_area.f64.gz",
+  "inside": "inside.f64.gz",
+  "cu_frac_0": "cu_frac_0.f64.gz",
+  "cu_frac_1": "cu_frac_1.f64.gz"
+ },
+ "results": {
+  "jacobi": {
+   "arrays": {
+    "V": "jacobi_V.f64.gz",
+    "J": "jacobi_J.f64.gz",
+    "T": "jacobi_T.f64.gz"
+   },
+   "dc": {
+    "drop_V": 0.008810937246811187,
+    "R_ohm": 0.002936979082270396,
+    "joule_W": 0.02643281174042804,
+    "Jmax": 80.35873507267533,
+    "cells": 2506,
+    "iterations": 342
+   },
+   "thermal": {
+    "Tmax": 205.32558319456837,
+    "P_total": 1.326432811740428,
+    "iterations": 585
+   },
+   "report": "thermal: 1.33 W in, h 10 W/m2K both faces, T_amb 35 C, grid 100 x 100 x 6 cells of 0.30 mm\nmax 205.3 C (+170.3 K) at (2.8, -26.0) mm on B.Cu\n   F.Cu    max 179.7 C  mean 140.5 C\n   B.Cu    max 205.3 C  mean 141.6 C\nhottest footprints: U1 (BUCK) 205.3 C, Q1 (FET) 151.2 C, J1 (XT30) 120.3 C\nDC /VIN: 3.00 A from source to sink, drop 8.8 mV (2.9 mohm), Joule 0.026 W, max current density 80.4 A/mm2 over 2506 copper cells"
+  },
+  "amg": {
+   "arrays": {
+    "V": "amg_V.f64.gz",
+    "J": "amg_J.f64.gz",
+    "T": "amg_T.f64.gz"
+   },
+   "dc": {
+    "drop_V": 0.008810937246811765,
+    "R_ohm": 0.0029369790822705885,
+    "joule_W": 0.0264328117404315,
+    "Jmax": 80.35873505623739,
+    "cells": 2506,
+    "iterations": 8
+   },
+   "thermal": {
+    "Tmax": 205.32558318204175,
+    "P_total": 1.3264328117404314,
+    "iterations": 20
+   },
+   "report": "thermal: 1.33 W in, h 10 W/m2K both faces, T_amb 35 C, grid 100 x 100 x 6 cells of 0.30 mm\nmax 205.3 C (+170.3 K) at (2.8, -26.0) mm on B.Cu\n   F.Cu    max 179.7 C  mean 140.5 C\n   B.Cu    max 205.3 C  mean 141.6 C\nhottest footprints: U1 (BUCK) 205.3 C, Q1 (FET) 151.2 C, J1 (XT30) 120.3 C\nDC /VIN: 3.00 A from source to sink, drop 8.8 mV (2.9 mohm), Joule 0.026 W, max current density 80.4 A/mm2 over 2506 copper cells"
+  }
+ }
+}
