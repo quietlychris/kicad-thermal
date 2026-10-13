@@ -30,15 +30,13 @@ cargo install --path .          # or: cargo build --release  (binary in target/r
 
 ## Use
 
-kicad-thermal reads the geometry JSON that kicad_fdtd's exporter writes from a `.kicad_pcb`. The exporter
-needs KiCad's Python module `pcbnew`, so that step stays in Python:
+kicad-thermal reads a geometry JSON exported from a `.kicad_pcb`. The exporter needs KiCad's Python module
+`pcbnew`, so that step stays in Python. `scripts/export_geometry.py` writes it with KiCad 9's own API and needs
+nothing else:
 
 ```bash
-scripts/fetch_kicad_fdtd.sh     # kicad_fdtd at 74e21eb into third_party/kicad_fdtd (once)
-
-# 1. Export the board geometry (on KiCad 9, add scripts/kicad9_shim to PYTHONPATH, see below)
-PYTHONPATH=third_party/kicad_fdtd:scripts/kicad9_shim \
-    python3 -m kicad_fdtd.cli export board.kicad_pcb -o board_geometry.json
+# 1. Export the board geometry (--fill refills zones first; --stackup takes the stackup from a JSON file)
+python3 scripts/export_geometry.py board.kicad_pcb board_geometry.json --fill
 
 # 2. Solve
 kicad-thermal board_geometry.json \
@@ -59,9 +57,15 @@ The library ([`Board::load`](src/geometry.rs) → [`Grid::new`](src/grid.rs) →
 [`solve_thermal`](src/solve.rs)) mirrors kicad_fdtd's Python API: build one grid, solve many DC paths on it, and
 pass their summed Joule heat to a single thermal solve (`extra_q`).
 
-**KiCad 9:** kicad_fdtd's exporter at `74e21eb` calls `BOARD.GetBoardPolygonOutlines` with KiCad 8's signature.
-`scripts/kicad9_shim/sitecustomize.py` adapts that one call at runtime when it is on `PYTHONPATH`, without
-changing kicad_fdtd's code.
+**The geometry format** is the one kicad_fdtd's exporter (`kicad-fdtd export`) writes, and `src/geometry.rs` reads
+either. `scripts/export_geometry.py` adds two things: each via's pad as copper on its top and bottom layers (a
+track ending inside a via pad but outside its drill is connected in KiCad, and looked open without it), and
+`--fill`/`--stackup`. On a 4-layer, 200-part board its pads, tracks, zones, vias, pads list, outline and stackup were
+identical to kicad_fdtd's export; only the added via pads differ.
+
+**KiCad 9 and kicad_fdtd's exporter:** at `74e21eb` it calls `BOARD.GetBoardPolygonOutlines` with KiCad 8's
+signature. `scripts/kicad9_shim/sitecustomize.py` adapts that one call at runtime when it is on `PYTHONPATH`, for
+comparisons against the Python original.
 
 ## Validation
 
@@ -166,7 +170,7 @@ set `KICAD_FDTD` to use another checkout. They need numpy, scipy and shapely, pl
 | `src/report.rs` | Report text and result JSON |
 | `examples/dump_grid.rs` | Writes the grid materials as raw f64, for `bench/cmp_grid.py` |
 | `tests/` | Regression, analytic and determinism tests; fixtures and Python reference data |
-| `scripts/` | Fetching and patching kicad_fdtd, reference generation, live comparison, the KiCad 9 shim |
+| `scripts/` | The geometry exporter (`export_geometry.py`); fetching and patching kicad_fdtd, reference generation, live comparison, the KiCad 9 shim |
 | `bench/` | Synthetic benchmark boards and the Rust vs Python benchmark |
 | `patches/` | The AMG patch for kicad_fdtd |
 

@@ -5,8 +5,8 @@
 itself and proving it matches the original: the same model, results agreeing with Python to
 solver tolerance, and faster through an AMG preconditioner. The Python original is not in this repo:
 `scripts/fetch_kicad_fdtd.sh` fetches it (pinned commit + the AMG patch) into `third_party/kicad_fdtd` when it is
-needed, as the test reference and as the exporter of a `.kicad_pcb` to the geometry JSON the Rust tool reads (that
-export needs KiCad's `pcbnew`).
+needed, as the test reference. Boards are exported to the geometry JSON the Rust tool reads by
+`scripts/export_geometry.py` (needs KiCad 9's `pcbnew`; same format as kicad_fdtd's exporter, plus via pads).
 
 Ask the maintainer before changing anything listed under "Ask first".
 
@@ -27,7 +27,8 @@ and pyamg; the versions used for the committed reference are recorded in `tests/
 | `scripts/fetch_kicad_fdtd.sh` | Clones kicad_fdtd at `74e21eb` into `third_party/` and applies `patches/` |
 | `scripts/compare_live.py` | Runs Python and Rust on any geometry JSON and diffs the results |
 | `scripts/gen_reference.py`, `scripts/make_fixtures.py` | Regenerate the Python reference and fixtures (see the rules below) |
-| `scripts/kicad9_shim/` | Runtime shim so kicad_fdtd's exporter works on KiCad 9 |
+| `scripts/export_geometry.py` | `.kicad_pcb` → geometry JSON (pcbnew, KiCad 9) |
+| `scripts/kicad9_shim/` | Runtime shim so kicad_fdtd's exporter works on KiCad 9 (comparisons only) |
 | `bench/` | Synthetic benchmark boards, Rust vs Python benchmark, grid-materials diff |
 | `NOTICE`, `LICENSE-MIT`, `LICENSE-APACHE` | Dual license; kicad_fdtd's MIT notice must stay in `NOTICE` |
 
